@@ -22,7 +22,7 @@ import { formulas } from '../core/formula';
  */
 function throttle(func, wait) {
   let timeout;
-  return (...arg) => {
+  return function(...arg) {
     const that = this;
     const args = arg;
     if (!timeout) {
@@ -193,39 +193,45 @@ function overlayerMousescroll(evt) {
   // console.log('deltaX', deltaX, 'evt.detail', evt.detail);
   // if (evt.detail) deltaY = evt.detail * 40;
   const moveY = (vertical) => {
+    const stepRows = (Math.abs(vertical) > 15) ? 8 : 1
     if (vertical > 0) {
       // up
-      const ri = data.scroll.ri + 1;
-      if (ri < rows.len) {
-        const rh = loopValue(ri, i => rows.getHeight(i));
-        verticalScrollbar.move({ top: top + rh - 1 });
+      let rh = 0
+      let ri = data.scroll.ri + 1
+      for (const till = Math.min(ri + stepRows, rows.len); ri < till; ri++) {
+        rh += loopValue(ri, i => rows.getHeight(i));
       }
+      verticalScrollbar.move({ top: top + rh - 1 });
     } else {
       // down
-      const ri = data.scroll.ri - 1;
-      if (ri >= 0) {
-        const rh = loopValue(ri, i => rows.getHeight(i));
-        verticalScrollbar.move({ top: ri === 0 ? 0 : top - rh });
+      let rh = 0
+      let ri = data.scroll.ri - 1
+      for (const till = Math.max(ri - stepRows, 0); ri >= till; ri--) {
+        rh += loopValue(ri, i => rows.getHeight(i));
       }
+      verticalScrollbar.move({ top: ri === 0 ? 0 : top - rh });
     }
   };
 
   // deltaX for Mac horizontal scroll
   const moveX = (horizontal) => {
+    const stepCols = (Math.abs(horizontal) > 15) ? 3 : 1
     if (horizontal > 0) {
       // left
-      const ci = data.scroll.ci + 1;
-      if (ci < cols.len) {
-        const cw = loopValue(ci, i => cols.getWidth(i));
-        horizontalScrollbar.move({ left: left + cw - 1 });
+      let cw = 0
+      let ci = data.scroll.ci + 1
+      for (const till = Math.min(ci + stepCols, cols.len); ci < till; ci++) {
+        cw += loopValue(ci, i => cols.getWidth(i));
       }
+      horizontalScrollbar.move({ left: left + cw - 1 });
     } else {
       // right
-      const ci = data.scroll.ci - 1;
-      if (ci >= 0) {
-        const cw = loopValue(ci, i => cols.getWidth(i));
-        horizontalScrollbar.move({ left: ci === 0 ? 0 : left - cw });
+      let cw = 0
+      let ci = data.scroll.ci - 1
+      for (const till = Math.max(ci - stepCols, 0); ci >= till; ci--) {
+        cw += loopValue(ci, i => cols.getWidth(i));
       }
+      horizontalScrollbar.move({ left: ci === 0 ? 0 : left - cw });
     }
   };
   const tempY = Math.abs(deltaY);
@@ -699,6 +705,7 @@ function sheetInitEvents() {
     evt.preventDefault();
   });
 
+  const _selectorMove = throttle(selectorMove, 20)
   // for selector
   bind(window, 'keydown', (evt) => {
     if (!this.focusing) return;
@@ -793,33 +800,33 @@ function sheetInitEvents() {
           clearClipboard.call(this);
           break;
         case 37: // left
-          selectorMove.call(this, shiftKey, 'left');
+          _selectorMove.call(this, shiftKey, 'left');
           evt.preventDefault();
           break;
         case 38: // up
-          selectorMove.call(this, shiftKey, 'up');
+          _selectorMove.call(this, shiftKey, 'up');
           evt.preventDefault();
           break;
         case 39: // right
-          selectorMove.call(this, shiftKey, 'right');
+          _selectorMove.call(this, shiftKey, 'right');
           evt.preventDefault();
           break;
         case 40: // down
-          selectorMove.call(this, shiftKey, 'down');
+          _selectorMove.call(this, shiftKey, 'down');
           evt.preventDefault();
           break;
         case 9: // tab
           editor.clear();
           // shift + tab => move left
           // tab => move right
-          selectorMove.call(this, false, shiftKey ? 'left' : 'right');
+          _selectorMove.call(this, false, shiftKey ? 'left' : 'right');
           evt.preventDefault();
           break;
         case 13: // enter
           editor.clear();
           // shift + enter => move up
           // enter => move down
-          selectorMove.call(this, false, shiftKey ? 'up' : 'down');
+          _selectorMove.call(this, false, shiftKey ? 'up' : 'down');
           evt.preventDefault();
           break;
         case 8: // backspace
