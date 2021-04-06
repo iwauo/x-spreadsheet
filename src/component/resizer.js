@@ -44,16 +44,20 @@ export default class Resizer {
       left, top, width, height,
     } = rect;
     el.offset({
-      left: vertical ? left + width - 5 : left,
-      top: vertical ? top : top + height - 5,
+      //left: vertical ? left + width - 5 : left,
+      //top: vertical ? top : top + height - 5,
+      left: vertical ? left + width : left,
+      top: vertical ? top : top + height,
     }).show();
     hoverEl.offset({
       width: vertical ? 5 : width,
       height: vertical ? height : 5,
     });
     lineEl.offset({
-      width: vertical ? 0 : line.width,
-      height: vertical ? line.height : 0,
+      left: vertical ? 0 : -line.width/2, //ADDED
+      top: vertical ? -line.height/2 : 0, //ADDED
+      width: vertical ? 0 : line.width * 2,
+      height: vertical ? line.height * 2 : 0,
     });
     unhideHoverEl.offset({
       left: vertical ? 5 - width : left,
