@@ -382,12 +382,17 @@ class Draw {
   rect(box, dtextcb) {
     const { ctx } = this;
     const {
-      x, y, width, height, bgcolor,
+      x, y, width, height, bgcolor, fillGutter,
     } = box;
     ctx.save();
     ctx.beginPath();
     ctx.fillStyle = bgcolor || '#fff';
-    ctx.rect(npxLine(x + 1), npxLine(y + 1), npx(width - 2), npx(height - 2));
+    ctx.rect(
+      npxLine(x + 0.5),
+      npxLine(y + 0.5),
+      npx(width - 1 + (fillGutter.right ? 2 : 0)),
+      npx(height - 1 + (fillGutter.bottom ? 2 : 0)),
+    );
     ctx.clip();
     ctx.fill();
     dtextcb();

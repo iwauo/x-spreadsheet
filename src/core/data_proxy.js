@@ -953,10 +953,21 @@ export default class DataProxy {
   }
 
   getCellStyleOrDefault(ri, ci) {
+    const cellStyle = this.getCellStyle(ri, ci);
+    const lowerSideCellStyle = this.getCellStyle(ri + 1, ci);
+    const rightSideCellStyle = this.getCellStyle(ri, ci + 1);
+    const fillGutter = {}
+    if (cellStyle.bgcolor) {
+      fillGutter.bottom = (lowerSideCellStyle.bgcolor === cellStyle.bgcolor)
+      fillGutter.right = (rightSideCellStyle.bgcolor === cellStyle.bgcolor)
+    }
+    return helper.merge(this.defaultStyle(), {fillGutter: fillGutter}, cellStyle);
+  }
+
+  getCellStyle(ri, ci) {
     const { styles, rows } = this;
     const cell = rows.getCell(ri, ci);
-    const cellStyle = (cell && cell.style !== undefined) ? styles[cell.style] : {};
-    return helper.merge(this.defaultStyle(), cellStyle);
+    return (cell && cell.style !== undefined) ? styles[cell.style] : {};
   }
 
   getSelectedCellStyle() {
