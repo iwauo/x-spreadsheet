@@ -131,15 +131,18 @@ function overlayerMousemove(evt) {
     rowResizer, colResizer, tableEl, data,
   } = this;
   const { rows, cols } = data;
+  /*
   if (offsetX > cols.indexWidth && offsetY > rows.height) {
     rowResizer.hide();
     colResizer.hide();
     return;
   }
+  */
   const tRect = tableEl.box();
   const cRect = data.getCellRectByXY(evt.offsetX, evt.offsetY);
-  if (cRect.ri >= 0 && cRect.ci === -1) {
-    cRect.width = cols.indexWidth;
+//  if (cRect.ri >= 0 && cRect.ci === -1) {
+  if (cRect.ri >= 0) {
+    //cRect.width = cols.indexWidth;
     rowResizer.show(cRect, {
       width: tRect.width,
     });
@@ -151,8 +154,9 @@ function overlayerMousemove(evt) {
   } else {
     rowResizer.hide();
   }
-  if (cRect.ri === -1 && cRect.ci >= 0) {
-    cRect.height = rows.height;
+//  if (cRect.ri === -1 && cRect.ci >= 0) {
+  if (cRect.ci >= 0) {
+//    cRect.height = rows.height;
     colResizer.show(cRect, {
       height: tRect.height,
     });
