@@ -271,22 +271,22 @@ class Draw {
 
   border(style, color) {
     const { ctx } = this;
-    ctx.lineWidth = thinLineWidth();
     ctx.strokeStyle = color;
-    ctx.setLineDash([]);
-    // console.log('style:', style);
-    if (style === 'medium') {
-      ctx.lineWidth = npx(2) - 0.5;
-    } else if (style === 'thick') {
-      ctx.lineWidth = npx(3);
-    } else if (style === 'dashed') {
-      ctx.setLineDash([npx(3), npx(2)]);
-    } else if (style === 'dotted') {
-      ctx.setLineDash([npx(1), npx(1)]);
-    } else if (style === 'double') {
-      ctx.setLineDash([npx(2), 0]);
-    }
+    ctx.lineWidth = this.borderWidthOf(style)
+    ctx.setLineDash(this.borderDashOf(style));
     return this;
+  }
+
+  borderDashOf(style) {
+    if (style === 'dashed') return [npx(3), npx(2)];
+    if (style === 'dotted') return [npx(1), npx(1)];
+    return []
+  }
+
+  borderWidthOf(style) {
+    if (style === 'medium') return npx(2) - 0.5;
+    if (style === 'thick') return npx(3);
+    return thinLineWidth();
   }
 
   line(...xys) {
@@ -304,6 +304,15 @@ class Draw {
     return this;
   }
 
+  edgeAdjust(border) {
+    if (!border) return 0;
+    const [style] = border;
+    if (style === "thin") return 0;
+    if (style === "medium") return 0.5;
+    if (style === "thick") return 1.5;
+    return 0;
+  }
+
   strokeBorders(box) {
     const { ctx } = this;
     ctx.save();
@@ -311,22 +320,61 @@ class Draw {
     const {
       borderTop, borderRight, borderBottom, borderLeft,
     } = box;
+
+    const x1 = box.x;
+    const y1 = box.y;
+    const x2 = x1 + box.width;
+    const y2 = y1 + box.height;
+    const doubleLineSpacing = 2;
     if (borderTop) {
       this.border(...borderTop);
-      // console.log('box.topxys:', box.topxys());
-      this.line(...box.topxys());
+      this.line([x1, y1], [x2 + this.edgeAdjust(borderRight) , y1]);
+      if (borderTop[0] === 'double') {
+        const cutLeft = (borderTop && borderTop[0] === 'double');
+        const cutRight = (borderBottom && borderBottom[0] === 'double');
+        this.line(
+          [x1 + (cutLeft ? doubleLineSpacing : 0), y1 + doubleLineSpacing],
+          [x2 - (cutRight ? doubleLineSpacing : 0), y1 + doubleLineSpacing],
+        );
+      }
     }
     if (borderRight) {
       this.border(...borderRight);
-      this.line(...box.rightxys());
+      this.line([x2, y1], [x2, y2 + this.edgeAdjust(borderBottom)]);
+      if (borderRight[0] === 'double') {
+        const cutTop = (borderTop && borderTop[0] === 'double');
+        const cutBottom = (borderBottom && borderBottom[0] === 'double');
+        this.line(
+          [x2 - doubleLineSpacing, y1 + (cutTop ? doubleLineSpacing : 0)],
+          [x2 - doubleLineSpacing, y2 - (cutBottom ? doubleLineSpacing : 0)],
+        );
+      }
     }
     if (borderBottom) {
       this.border(...borderBottom);
-      this.line(...box.bottomxys());
+      this.line([x1 - this.edgeAdjust(borderLeft), y2], [x2, y2]);
+      if (borderBottom[0] === 'double') {
+        const cutRight = (borderRight && borderRight[0] === 'double');
+        const cutLeft = (borderLeft && borderLeft[0] === 'double');
+        this.line(
+          [x1 + (cutLeft ? doubleLineSpacing : 0), y2 - doubleLineSpacing],
+          [x2 - (cutRight ? doubleLineSpacing : 0), y2 - doubleLineSpacing],
+        );
+      }
     }
     if (borderLeft) {
       this.border(...borderLeft);
-      this.line(...box.leftxys());
+      console.log('this.edgeAdjust(borderTop)', this.edgeAdjust(borderTop))
+      this.line([x1, y1 - this.edgeAdjust(borderTop)], [x1, y2]);
+      if (borderLeft[0] === 'double') {
+        const cutTop = (borderTop && borderTop[0] === 'double');
+        const cutBottom = (borderBottom && borderBottom[0] === 'double');
+        this.line(
+          [x1 + doubleLineSpacing, y1 + (cutTop ? doubleLineSpacing : 0)],
+          [x1 + doubleLineSpacing, y2 - (cutBottom ? doubleLineSpacing : 0)],
+        );
+      }
+
     }
     ctx.restore();
   }
