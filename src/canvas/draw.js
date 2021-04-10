@@ -4,7 +4,8 @@ function dpr() {
 }
 
 function thinLineWidth() {
-  return dpr() - 0.5;
+  //return dpr() - 0.5;
+  return 1;
 }
 
 function npx(px) {
@@ -12,8 +13,9 @@ function npx(px) {
 }
 
 function npxLine(px) {
-  const n = npx(px);
-  return n > 0 ? n - 0.5 : 0.5;
+  // const n = npx(px);
+  // return n > 0 ? n - 0.5 : 0.5;
+  return npx(px);
 }
 
 class DrawBox {
@@ -189,7 +191,8 @@ class Draw {
   }
 
   fillRect(x, y, w, h) {
-    this.ctx.fillRect(npx(x) - 0.5, npx(y) - 0.5, npx(w), npx(h));
+    //this.ctx.fillRect(npx(x) - 0.5, npx(y) - 0.5, npx(w), npx(h));
+    this.ctx.fillRect(npx(x), npx(y), npx(w), npx(h));
     return this;
   }
 
@@ -386,7 +389,8 @@ class Draw {
     ctx.save();
     ctx.beginPath();
     ctx.fillStyle = bgcolor || '#fff';
-    ctx.rect(npxLine(x + 1), npxLine(y + 1), npx(width - 2), npx(height - 2));
+    //ctx.rect(npxLine(x + 1), npxLine(y + 1), npx(width - 2), npx(height - 2));
+    ctx.rect(npxLine(x), npxLine(y), npx(width), npx(height));
     ctx.clip();
     ctx.fill();
     dtextcb();
