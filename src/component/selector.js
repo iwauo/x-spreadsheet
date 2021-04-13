@@ -6,17 +6,20 @@ const selectorHeightBorderWidth = 2 * 2 - 1;
 let startZIndex = 10;
 
 class SelectorElement {
-  constructor(useHideInput = false) {
+  constructor(useHideInput = false, data) {
     this.useHideInput = useHideInput;
+    this.data = data;
     this.inputChange = () => {};
     this.cornerEl = h('div', `${cssPrefix}-selector-corner`);
     this.areaEl = h('div', `${cssPrefix}-selector-area`)
       .child(this.cornerEl).hide();
+    this.rowHighlightEl = h('div', `${cssPrefix}-selector-row-highlight`).hide();
+    this.colHighlightEl = h('div', `${cssPrefix}-selector-col-highlight`).hide();
     this.clipboardEl = h('div', `${cssPrefix}-selector-clipboard`).hide();
     this.autofillEl = h('div', `${cssPrefix}-selector-autofill`).hide();
     this.el = h('div', `${cssPrefix}-selector`)
       .css('z-index', `${startZIndex}`)
-      .children(this.areaEl, this.clipboardEl, this.autofillEl)
+      .children(this.areaEl, this.clipboardEl, this.autofillEl, this.rowHighlightEl, this.colHighlightEl)
       .hide();
     if (useHideInput) {
       this.hideInput = h('input', '')
@@ -49,6 +52,16 @@ class SelectorElement {
       left: left - 0.8,
       top: top - 0.8,
     };
+    this.rowHighlightEl.offset({
+      ...v,
+      left: 0,
+      width: this.data.cols.totalWidth(),
+    }).show()
+    this.colHighlightEl.offset({
+      ...v,
+      top: 0,
+      height: this.data.rows.totalHeight(),
+    }).show()
     this.areaEl.offset(of).show();
     if (this.useHideInput) {
       this.hideInputDiv.offset(of);
@@ -197,10 +210,10 @@ export default class Selector {
   constructor(data) {
     this.inputChange = () => {};
     this.data = data;
-    this.br = new SelectorElement(true);
-    this.t = new SelectorElement();
-    this.l = new SelectorElement();
-    this.tl = new SelectorElement();
+    this.br = new SelectorElement(true, data);
+    this.t = new SelectorElement(false, data);
+    this.l = new SelectorElement(false, data);
+    this.tl = new SelectorElement(false, data);
     this.br.inputChange = (v) => {
       this.inputChange(v);
     };
