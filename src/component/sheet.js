@@ -4,6 +4,7 @@ import { bind, mouseMoveUp, bindTouch, createEventEmitter } from './event';
 import Resizer from './resizer';
 import Scrollbar from './scrollbar';
 import Selector from './selector';
+import Highlighter from './highlighter';
 import Editor from './editor';
 import Print from './print';
 import ContextMenu from './contextmenu';
@@ -131,13 +132,20 @@ function overlayerMousemove(evt) {
     rowResizer, colResizer, tableEl, data,
   } = this;
   const { rows, cols } = data;
+  const cRect = data.getCellRectByXY(evt.offsetX, evt.offsetY);
+  if (offsetX > cols.indexWidth && offsetY > rows.height) {
+    this.highlighter.setOffset({
+      ...cRect,
+      left: cRect.left - cols.indexWidth,
+      top: cRect.top - rows.height,
+    })
+  }
   if (offsetX > cols.indexWidth && offsetY > rows.height) {
     rowResizer.hide();
     colResizer.hide();
     return;
   }
   const tRect = tableEl.box();
-  const cRect = data.getCellRectByXY(evt.offsetX, evt.offsetY);
   if (cRect.ri >= 0 && cRect.ci === -1) {
     cRect.width = cols.indexWidth;
     rowResizer.show(cRect, {
@@ -578,6 +586,7 @@ function sheetInitEvents() {
     toolbar,
     modalValidation,
     sortFilter,
+    highlighter,
   } = this;
   // overlayer
   overlayerEl
@@ -610,6 +619,7 @@ function sheetInitEvents() {
       const { offsetX, offsetY } = evt;
       if (offsetY <= 0) colResizer.hide();
       if (offsetX <= 0) rowResizer.hide();
+      highlighter.hide();
     });
 
   selector.inputChange = (v) => {
@@ -877,10 +887,12 @@ export default class Sheet {
     this.contextMenu = new ContextMenu(() => this.getRect(), !showContextmenu);
     // selector
     this.selector = new Selector(data);
+    this.highlighter = new Highlighter(data);
     this.overlayerCEl = h('div', `${cssPrefix}-overlayer-content`)
       .children(
         this.editor.el,
         this.selector.el,
+        this.highlighter.el,
       );
     this.overlayerEl = h('div', `${cssPrefix}-overlayer`)
       .child(this.overlayerCEl);

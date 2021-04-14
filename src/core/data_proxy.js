@@ -701,6 +701,8 @@ export default class DataProxy {
         ({
           left, top, width, height,
         } = this.cellRect(ri, ci));
+        left = left + cols.indexWidth;
+        top = top + rows.height;
       }
     }
     return {
