@@ -52,16 +52,19 @@ class SelectorElement {
       left: left - 0.8,
       top: top - 0.8,
     };
-    this.rowHighlightEl.offset({
-      ...v,
-      left: 0,
-      width: this.data.cols.totalWidth(),
-    }).show()
-    this.colHighlightEl.offset({
-      ...v,
-      top: 0,
-      height: this.data.rows.totalHeight(),
-    }).show()
+    const { highlightMode } = this.data.settings;
+    if (highlightMode && (highlightMode === 'select' || highlightMode === 'both')) {
+      this.rowHighlightEl.offset({
+        ...v,
+        left: 0,
+        width: this.data.cols.totalWidth(),
+      }).show()
+      this.colHighlightEl.offset({
+        ...v,
+        top: 0,
+        height: this.data.rows.totalHeight(),
+      }).show()
+    }
     this.areaEl.offset(of).show();
     if (this.useHideInput) {
       this.hideInputDiv.offset(of);

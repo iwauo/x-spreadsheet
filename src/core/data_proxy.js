@@ -77,6 +77,7 @@ const defaultSettings = {
   showGrid: true,
   showToolbar: true,
   showContextmenu: true,
+  highlightMode: undefined, // select | hover | both
   row: {
     len: 100,
     height: 25,

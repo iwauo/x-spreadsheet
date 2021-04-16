@@ -9,9 +9,12 @@ class HighlighterElement {
     this.el = h('div', `${cssPrefix}-highlighter`)
       .children(this.rowHighlightEl, this.colHighlightEl)
       .hide();
+    const { highlightMode } = this.data.settings;
+    this.enabled = highlightMode && (highlightMode === 'hover' || highlightMode === 'both');
   }
 
   setOffset({left, top, width, height}) {
+    if (!this.enabled) return;
     this.rowHighlightEl.offset({
       top: top,
       left: 0,
