@@ -9,12 +9,19 @@ class Cols {
     this.width = width;
     this.indexWidth = indexWidth;
     this.minWidth = minWidth;
+    this.colGroups = [];
   }
 
   setData(d) {
     if (d.len) {
       this.len = d.len;
       delete d.len;
+    }
+    if (d.colGroups) {
+      d.colGroups.forEach(it => {
+        this.defineColGroup(it.from[0], it.from[1], it.to, !!it.folded);
+      })
+      delete d.colGroups;
     }
     this._ = d;
   }
@@ -55,7 +62,11 @@ class Cols {
 
   isHide(ci) {
     const col = this._[ci];
-    return col && col.hide;
+    if (col && col.hide) return true
+    const affectingGroups = this.colGroups.flatMap(colGroup =>
+      (colGroup.from[1] < ci && ci <= colGroup.to) ? [colGroup] : []
+    )
+    return affectingGroups.some(it => it.folded)
   }
 
   setHide(ci, v) {
@@ -75,6 +86,34 @@ class Cols {
 
   totalWidth() {
     return this.sumWidth(0, this.len);
+  }
+
+  defineColGroup(ri, ci, to, folded = true) {
+    this.colGroups.push({ from: [ri, ci], to: to, folded: folded });
+  }
+
+  colGroupAt(ri, ci) {
+    return this.colGroups.find(it => it.from[0] === ri && it.from[1] === ci);
+  }
+
+  setFolded(ri, ci, folded) {
+    const colGroup = this.colGroupAt(ri, ci);
+    if (colGroup) {
+      colGroup.folded = !!folded;
+    }
+  }
+
+  isFolded(ri, ci) {
+    const colGroup = this.colGroupAt(ri, ci);
+    return colGroup && colGroup.folded
+  }
+
+  fold(ri, ci) {
+    this.setFolded(ri, ci, true);
+  }
+
+  unfold(ri, ci) {
+    this.setFolded(ri, ci, false);
   }
 }
 

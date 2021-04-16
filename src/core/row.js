@@ -7,6 +7,7 @@ class Rows {
     this.len = len;
     // default row height
     this.height = height;
+    this.rowGroups = [];
   }
 
   getHeight(ri) {
@@ -35,13 +36,45 @@ class Rows {
 
   isHide(ri) {
     const row = this.get(ri);
-    return row && row.hide;
+    if (row && row.hide) return true;
+    const affectingGroups = this.rowGroups.flatMap(rowGroup =>
+      (rowGroup.from[0] < ri && ri <= rowGroup.to) ? [rowGroup] : []
+    )
+    return affectingGroups.some(it => it.folded)
   }
 
   setHide(ri, v) {
     const row = this.getOrNew(ri);
     if (v === true) row.hide = true;
     else delete row.hide;
+  }
+
+  defineRowGroup(ri, ci, to, folded = true) {
+    this.rowGroups.push({ from: [ri, ci], to: to, folded: folded });
+  }
+
+  setFolded(ri, ci, folded) {
+    const rowGroup = this.rowGroupAt(ri, ci);
+    if (rowGroup) {
+      rowGroup.folded = !!folded;
+    }
+  }
+
+  rowGroupAt(ri, ci) {
+    return this.rowGroups.find(it => it.from[0] === ri && it.from[1] === ci);
+  }
+
+  isFolded(ri, ci) {
+    const rowGroup = this.rowGroupAt(ri, ci);
+    return rowGroup && rowGroup.folded
+  }
+
+  fold(ri, ci) {
+    this.setFolded(ri, ci, true);
+  }
+
+  unfold(ri, ci) {
+    this.setFolded(ri, ci, false);
   }
 
   setStyle(ri, style) {
@@ -340,6 +373,10 @@ class Rows {
     if (d.len) {
       this.len = d.len;
       delete d.len;
+    }
+    if (d.rowGroups) {
+      this.rowGroups = d.rowGroups;
+      delete d.rowGroups;
     }
     this._ = d;
   }

@@ -392,6 +392,21 @@ class Draw {
     dtextcb();
     ctx.restore();
   }
+
+  image({x, y, width, height, rotation = 0}, src) {
+    const { ctx } = this;
+    const onLoad = () => {
+      ctx.save();
+      ctx.translate(npx(x + width/2), npx(y + height/2));
+      if (rotation) ctx.rotate(Math.PI * (rotation/180));
+      ctx.translate(-npx(width/2), -npx(height/2));
+      ctx.drawImage(image, 0, 0, npx(width), npx(height));
+      ctx.restore();
+    };
+    const image = new Image(npx(width), npx(height));
+    image.onload = onLoad;
+    image.src = src;
+  }
 }
 
 export default {};

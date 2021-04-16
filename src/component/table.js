@@ -7,6 +7,7 @@ import { formatm } from '../core/format';
 import {
   Draw, DrawBox, thinLineWidth, npx,
 } from '../canvas/draw';
+import Grouping from './grouping';
 // gobal var
 const cellPaddingWidth = 5;
 const tableFixedHeaderCleanStyle = { fillStyle: '#f4f5f8' };
@@ -72,6 +73,28 @@ export function renderCell(draw, data, rindex, cindex, yoffset = 0) {
     // bboxes.push({ ri: rindex, ci: cindex, box: dbox });
     draw.strokeBorders(dbox);
   }
+
+  const colGroup = data.cols.colGroupAt(nrindex, cindex)
+  if (colGroup) {
+    draw.image({
+      x: dbox.x + dbox.width + data.cols.indexWidth - 20,
+      y: dbox.y + data.rows.height,
+      width: 20,
+      height: 20,
+      rotation: colGroup.folded ? 90 : -90,
+    }, Grouping.icon)
+  }
+  const rowGroup = data.rows.rowGroupAt(nrindex, cindex)
+  if (rowGroup) {
+    draw.image({
+      x: dbox.x + data.cols.indexWidth,
+      y: dbox.y + data.rows.height,
+      width: 20,
+      height: 20,
+      rotation: rowGroup.folded ? -90 : 0,
+    }, Grouping.icon)
+  }
+
   draw.rect(dbox, () => {
     // render text
     let cellText = "";

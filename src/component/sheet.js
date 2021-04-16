@@ -1,6 +1,7 @@
 /* global window */
 import { h } from './element';
 import { bind, mouseMoveUp, bindTouch, createEventEmitter } from './event';
+import Grouping from './grouping';
 import Resizer from './resizer';
 import Scrollbar from './scrollbar';
 import Selector from './selector';
@@ -128,16 +129,17 @@ function overlayerMousemove(evt) {
   if (evt.target.className === `${cssPrefix}-resizer-hover`) return;
   const { offsetX, offsetY } = evt;
   const {
-    rowResizer, colResizer, tableEl, data,
+    rowResizer, colResizer, grouping, tableEl, data,
   } = this;
+  const cRect = data.getCellRectByXY(evt.offsetX, evt.offsetY);
   const { rows, cols } = data;
   if (offsetX > cols.indexWidth && offsetY > rows.height) {
+    grouping.show(cRect)
     rowResizer.hide();
     colResizer.hide();
     return;
   }
   const tRect = tableEl.box();
-  const cRect = data.getCellRectByXY(evt.offsetX, evt.offsetY);
   if (cRect.ri >= 0 && cRect.ci === -1) {
     cRect.width = cols.indexWidth;
     rowResizer.show(cRect, {
@@ -569,6 +571,7 @@ function sheetInitEvents() {
   const {
     selector,
     overlayerEl,
+    grouping,
     rowResizer,
     colResizer,
     verticalScrollbar,
@@ -859,6 +862,7 @@ export default class Sheet {
     this.data = data;
     // table
     this.tableEl = h('canvas', `${cssPrefix}-table`);
+    this.grouping = new Grouping(this);
     // resizer
     this.rowResizer = new Resizer(false, data.rows.height);
     this.colResizer = new Resizer(true, data.cols.minWidth);
@@ -890,6 +894,7 @@ export default class Sheet {
     this.el.children(
       this.tableEl,
       this.overlayerEl.el,
+      this.grouping.el,
       this.rowResizer.el,
       this.colResizer.el,
       this.verticalScrollbar.el,
