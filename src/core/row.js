@@ -37,20 +37,17 @@ class Rows {
   isHide(ri) {
     const row = this.get(ri);
     if (row && row.hide) return true;
-    const affectingGroups = this.rowGroups.flatMap(rowGroup =>
-      (rowGroup.from[0] < ri && ri <= rowGroup.to) ? [rowGroup] : []
-    )
-    return affectingGroups.some(it => it.folded)
+    const affectingGroups = this.rowGroups.flatMap(rowGroup => {
+      const distance = ri - rowGroup.ri;
+      return (0 < distance && distance < rowGroup.rows) ? [rowGroup] : [];
+    });
+    return affectingGroups.some(it => !!it.folded);
   }
 
   setHide(ri, v) {
     const row = this.getOrNew(ri);
     if (v === true) row.hide = true;
     else delete row.hide;
-  }
-
-  defineRowGroup(ri, ci, to, folded = true) {
-    this.rowGroups.push({ from: [ri, ci], to: to, folded: folded });
   }
 
   setFolded(ri, ci, folded) {
@@ -61,7 +58,7 @@ class Rows {
   }
 
   rowGroupAt(ri, ci) {
-    return this.rowGroups.find(it => it.from[0] === ri && it.from[1] === ci);
+    return this.rowGroups.find(it => it.ri === ri && it.ci === ci);
   }
 
   isFolded(ri, ci) {

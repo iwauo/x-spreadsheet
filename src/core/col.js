@@ -18,9 +18,7 @@ class Cols {
       delete d.len;
     }
     if (d.colGroups) {
-      d.colGroups.forEach(it => {
-        this.defineColGroup(it.from[0], it.from[1], it.to, !!it.folded);
-      })
+      this.colGroups.push(...d.colGroups);
       delete d.colGroups;
     }
     this._ = d;
@@ -62,11 +60,12 @@ class Cols {
 
   isHide(ci) {
     const col = this._[ci];
-    if (col && col.hide) return true
-    const affectingGroups = this.colGroups.flatMap(colGroup =>
-      (colGroup.from[1] < ci && ci <= colGroup.to) ? [colGroup] : []
-    )
-    return affectingGroups.some(it => it.folded)
+    if (col && col.hide) return true;
+    const affectingGroups = this.colGroups.flatMap(colGroup => {
+      const distance = ci - colGroup.ci;
+      return (0 < distance && distance < colGroup.cols) ? [colGroup] : [];
+    });
+    return affectingGroups.some(it => !!it.folded);
   }
 
   setHide(ci, v) {
@@ -88,12 +87,8 @@ class Cols {
     return this.sumWidth(0, this.len);
   }
 
-  defineColGroup(ri, ci, to, folded = true) {
-    this.colGroups.push({ from: [ri, ci], to: to, folded: folded });
-  }
-
   colGroupAt(ri, ci) {
-    return this.colGroups.find(it => it.from[0] === ri && it.from[1] === ci);
+    return this.colGroups.find(it => it.ri === ri && it.ci === ci);
   }
 
   setFolded(ri, ci, folded) {

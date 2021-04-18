@@ -29,7 +29,7 @@
       const rows = {
         len: 80,
         rowGroups: [
-          { from: [0, 0], to: 5, folded: true }
+          { ri: 0,  ci: 0, rows: 6, folded: true }
         ],
         0: {
           cells: {
@@ -40,7 +40,6 @@
           cells: {
             0: { text: 'testingtesttestetst' },
             2: { text: 'testing' },
-            4: { colGroup: { to: 6, folded: true }}
           },
         },
         2: {
@@ -80,7 +79,7 @@
             len: 10,
             2: { width: 200 },
             colGroups: [
-              { from: [0, 0], to: 5, folded: true }
+              { ri: 0, ci: 0, cols: 6, folded: true }
             ],
           },
           rows,
