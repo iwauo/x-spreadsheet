@@ -36,12 +36,7 @@ class Rows {
 
   isHide(ri) {
     const row = this.get(ri);
-    if (row && row.hide) return true;
-    const affectingGroups = this.rowGroups.flatMap(rowGroup => {
-      const distance = ri - rowGroup.ri;
-      return (0 < distance && distance < rowGroup.rows) ? [rowGroup] : [];
-    });
-    return affectingGroups.some(it => !!it.folded);
+    return row && (row.hide || row.folded === true);
   }
 
   setHide(ri, v) {
@@ -55,6 +50,7 @@ class Rows {
     if (rowGroup) {
       rowGroup.folded = !!folded;
     }
+    this.applyFoldingState();
   }
 
   rowGroupAt(ri, ci) {
@@ -64,6 +60,19 @@ class Rows {
   isFolded(ri, ci) {
     const rowGroup = this.rowGroupAt(ri, ci);
     return rowGroup && rowGroup.folded
+  }
+
+  applyFoldingState() {
+    Object.entries(this._).forEach(([index, row]) => {
+      if (row && row.hide) return true;
+      const ri = Number(index)
+      const affectingGroups = this.rowGroups.flatMap(rowGroup => {
+        const distance = ri - rowGroup.ri;
+        return (0 < distance && distance < rowGroup.rows) ? [rowGroup] : [];
+      });
+      const folded = affectingGroups.some(it => !!it.folded);
+      row.folded = folded;
+    });
   }
 
   fold(ri, ci) {
@@ -371,11 +380,12 @@ class Rows {
       this.len = d.len;
       delete d.len;
     }
+    this._ = d;
     if (d.rowGroups) {
       this.rowGroups = d.rowGroups;
       delete d.rowGroups;
+      this.applyFoldingState();
     }
-    this._ = d;
   }
 
   getData() {

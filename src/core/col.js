@@ -17,11 +17,12 @@ class Cols {
       this.len = d.len;
       delete d.len;
     }
+    this._ = d;
     if (d.colGroups) {
       this.colGroups.push(...d.colGroups);
       delete d.colGroups;
+      this.applyFoldingState();
     }
-    this._ = d;
   }
 
   getData() {
@@ -60,12 +61,7 @@ class Cols {
 
   isHide(ci) {
     const col = this._[ci];
-    if (col && col.hide) return true;
-    const affectingGroups = this.colGroups.flatMap(colGroup => {
-      const distance = ci - colGroup.ci;
-      return (0 < distance && distance < colGroup.cols) ? [colGroup] : [];
-    });
-    return affectingGroups.some(it => !!it.folded);
+    return col && (col.hide || col.folded === true)
   }
 
   setHide(ci, v) {
@@ -96,11 +92,25 @@ class Cols {
     if (colGroup) {
       colGroup.folded = !!folded;
     }
+    this.applyFoldingState();
   }
 
   isFolded(ri, ci) {
     const colGroup = this.colGroupAt(ri, ci);
     return colGroup && colGroup.folded
+  }
+
+  applyFoldingState() {
+    Object.entries(this._).forEach(([index, col]) => {
+      if (col && col.hide) return true;
+      const ci = Number(index)
+      const affectingGroups = this.colGroups.flatMap(colGroup => {
+        const distance = ci - colGroup.ci;
+        return (0 < distance && distance < colGroup.cols) ? [colGroup] : [];
+      });
+      const folded = affectingGroups.some(it => !!it.folded);
+      col.folded = folded;
+    })
   }
 
   fold(ri, ci) {
