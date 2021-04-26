@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
   <title><%= htmlWebpackPlugin.options.title %></title>
-    
+
 </head>
 <body onload="load()">
   <div style="position: fixed; right: 0; top: .3em;">
@@ -28,6 +28,14 @@
       }
       const rows = {
         len: 80,
+        rowGroups: [
+          { ri: 0,  ci: 0, rows: 6, folded: true }
+        ],
+        0: {
+          cells: {
+            0: {},
+          }
+        },
         1: {
           cells: {
             0: { text: 'testingtesttestetst' },
@@ -70,6 +78,9 @@
           cols: {
             len: 10,
             2: { width: 200 },
+            colGroups: [
+              { ri: 0, ci: 0, cols: 6, folded: true }
+            ],
           },
           rows,
         }, { name: 'sheet-test', rows: rows10 }]).change((cdata) => {

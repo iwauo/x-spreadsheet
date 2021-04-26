@@ -7,6 +7,7 @@ class Rows {
     this.len = len;
     // default row height
     this.height = height;
+    this.rowGroups = [];
   }
 
   getHeight(ri) {
@@ -35,13 +36,51 @@ class Rows {
 
   isHide(ri) {
     const row = this.get(ri);
-    return row && row.hide;
+    return row && (row.hide || row.folded === true);
   }
 
   setHide(ri, v) {
     const row = this.getOrNew(ri);
     if (v === true) row.hide = true;
     else delete row.hide;
+  }
+
+  setFolded(ri, ci, folded) {
+    const rowGroup = this.rowGroupAt(ri, ci);
+    if (rowGroup) {
+      rowGroup.folded = !!folded;
+    }
+    this.applyFoldingState();
+  }
+
+  rowGroupAt(ri, ci) {
+    return this.rowGroups.find(it => it.ri === ri && it.ci === ci);
+  }
+
+  isFolded(ri, ci) {
+    const rowGroup = this.rowGroupAt(ri, ci);
+    return rowGroup && rowGroup.folded
+  }
+
+  applyFoldingState() {
+    Object.entries(this._).forEach(([index, row]) => {
+      if (row && row.hide) return true;
+      const ri = Number(index)
+      const affectingGroups = this.rowGroups.flatMap(rowGroup => {
+        const distance = ri - rowGroup.ri;
+        return (0 < distance && distance < rowGroup.rows) ? [rowGroup] : [];
+      });
+      const folded = affectingGroups.some(it => !!it.folded);
+      row.folded = folded;
+    });
+  }
+
+  fold(ri, ci) {
+    this.setFolded(ri, ci, true);
+  }
+
+  unfold(ri, ci) {
+    this.setFolded(ri, ci, false);
   }
 
   setStyle(ri, style) {
@@ -342,6 +381,11 @@ class Rows {
       delete d.len;
     }
     this._ = d;
+    if (d.rowGroups) {
+      this.rowGroups = d.rowGroups;
+      delete d.rowGroups;
+      this.applyFoldingState();
+    }
   }
 
   getData() {
