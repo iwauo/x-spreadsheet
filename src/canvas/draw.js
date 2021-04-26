@@ -367,7 +367,6 @@ class Draw {
     }
     if (borderLeft) {
       this.border(...borderLeft);
-      console.log('this.edgeAdjust(borderTop)', this.edgeAdjust(borderTop))
       this.line([x1, y1 - this.edgeAdjust(borderTop)], [x1, y2]);
       if (borderLeft[0] === 'double') {
         const cutTop = (borderTop && borderTop[0] === 'double');
