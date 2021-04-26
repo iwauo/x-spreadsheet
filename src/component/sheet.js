@@ -63,7 +63,7 @@ function scrollbarMove() {
   }
 }
 
-function selectorSet(multiple, ri, ci, indexesUpdated = true, moving = false) {
+function selectorSet(multiple, ri, ci, additive = false, indexesUpdated = true, moving = false) {
   if (ri === -1 && ci === -1) return;
   const {
     table, selector, toolbar, data,
@@ -72,11 +72,11 @@ function selectorSet(multiple, ri, ci, indexesUpdated = true, moving = false) {
   contextMenu.setMode((ri === -1 || ci === -1) ? 'row-col' : 'range');
   const cell = data.getCell(ri, ci);
   if (multiple) {
-    selector.setEnd(ri, ci, moving);
+    selector.setEnd(ri, ci, moving, additive);
     this.trigger('cells-selected', cell, selector.range);
   } else {
     // trigger click event
-    selector.set(ri, ci, indexesUpdated);
+    selector.set(ri, ci, indexesUpdated, additive);
     this.trigger('cell-selected', cell, ri, ci);
   }
   toolbar.reset();
@@ -398,7 +398,7 @@ function overlayerMousedown(evt) {
     if (isAutofillEl) {
       selector.showAutofill(ri, ci);
     } else {
-      selectorSet.call(this, false, ri, ci);
+      selectorSet.call(this, false, ri, ci, evt.ctrlKey || evt.metaKey);
     }
 
     // mouse move up
@@ -408,7 +408,7 @@ function overlayerMousedown(evt) {
       if (isAutofillEl) {
         selector.showAutofill(ri, ci);
       } else if (e.buttons === 1 && !e.shiftKey) {
-        selectorSet.call(this, true, ri, ci, true, true);
+        selectorSet.call(this, true, ri, ci, e.ctrlKey || e.metaKey, true, true);
       }
     }, () => {
       if (isAutofillEl && selector.arange && data.settings.mode !== 'read') {
@@ -777,7 +777,7 @@ function sheetInitEvents() {
           break;
         case 32:
           // ctrl + space, all cells in col
-          selectorSet.call(this, false, -1, this.data.selector.ci, false);
+          selectorSet.call(this, false, -1, this.data.selector.ci, false, false);
           evt.preventDefault();
           break;
         case 66:
@@ -797,7 +797,7 @@ function sheetInitEvents() {
         case 32:
           if (shiftKey) {
             // shift + space, all cells in row
-            selectorSet.call(this, false, this.data.selector.ri, -1, false);
+            selectorSet.call(this, false, this.data.selector.ri, -1, false, false);
           }
           break;
         case 27: // esc

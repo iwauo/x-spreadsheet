@@ -10,13 +10,13 @@ class SelectorElement {
     this.useHideInput = useHideInput;
     this.inputChange = () => {};
     this.cornerEl = h('div', `${cssPrefix}-selector-corner`);
-    this.areaEl = h('div', `${cssPrefix}-selector-area`)
-      .child(this.cornerEl).hide();
+    this.areaElList = [h('div', `${cssPrefix}-selector-area`)
+      .child(this.cornerEl).hide()];
     this.clipboardEl = h('div', `${cssPrefix}-selector-clipboard`).hide();
     this.autofillEl = h('div', `${cssPrefix}-selector-autofill`).hide();
     this.el = h('div', `${cssPrefix}-selector`)
       .css('z-index', `${startZIndex}`)
-      .children(this.areaEl, this.clipboardEl, this.autofillEl)
+      .children(this.clipboardEl, this.autofillEl, ...this.areaElList)
       .hide();
     if (useHideInput) {
       this.hideInput = h('input', '')
@@ -39,7 +39,25 @@ class SelectorElement {
     return this;
   }
 
-  setAreaOffset(v) {
+  setAreaOffset(v, targetEl = null) {
+    if (Array.isArray(v)) {
+      for (let i = 0, len = Math.max(v.length, this.areaElList.length); i < len; i++) {
+        const offset = v[i];
+        let areaEl = this.areaElList[i];
+        if (!offset && areaEl) {
+          areaEl.hide();
+        }
+        if (offset && !areaEl) {
+          areaEl = h('div', `${cssPrefix}-selector-area`).hide();
+          this.areaElList[i] = areaEl;
+          this.el.child(areaEl);
+        }
+        if (offset && areaEl) {
+          this.setAreaOffset(offset, areaEl);
+        }
+      }
+      return;
+    }
     const {
       left, top, width, height,
     } = v;
@@ -49,7 +67,7 @@ class SelectorElement {
       left: left - 0.8,
       top: top - 0.8,
     };
-    this.areaEl.offset(of).show();
+    targetEl.offset(of).show();
     if (this.useHideInput) {
       this.hideInputDiv.offset(of);
       this.hideInput.val('').focus();
@@ -139,24 +157,24 @@ function calLAreaOffset(offset) {
   };
 }
 
-function setBRAreaOffset(offset) {
+function setBRAreaOffset(offsetList) {
   const { br } = this;
-  br.setAreaOffset(calBRAreaOffset.call(this, offset));
+  br.setAreaOffset(offsetList.map(offset => calBRAreaOffset.call(this, offset)));
 }
 
-function setTLAreaOffset(offset) {
+function setTLAreaOffset(offsetList) {
   const { tl } = this;
-  tl.setAreaOffset(offset);
+  tl.setAreaOffset(offsetList);
 }
 
-function setTAreaOffset(offset) {
+function setTAreaOffset(offsetList) {
   const { t } = this;
-  t.setAreaOffset(calTAreaOffset.call(this, offset));
+  t.setAreaOffset(offsetList.map(offset => calTAreaOffset.call(this, offset)));
 }
 
-function setLAreaOffset(offset) {
+function setLAreaOffset(offsetList) {
   const { l } = this;
-  l.setAreaOffset(calLAreaOffset.call(this, offset));
+  l.setAreaOffset(offsetList.map(offset => calLAreaOffset.call(this, offset)));
 }
 
 function setLClipboardOffset(offset) {
@@ -179,11 +197,11 @@ function setTClipboardOffset(offset) {
   t.setClipboardOffset(calTAreaOffset.call(this, offset));
 }
 
-function setAllAreaOffset(offset) {
-  setBRAreaOffset.call(this, offset);
-  setTLAreaOffset.call(this, offset);
-  setTAreaOffset.call(this, offset);
-  setLAreaOffset.call(this, offset);
+function setAllAreaOffset(offsetList) {
+  setBRAreaOffset.call(this, offsetList);
+  setTLAreaOffset.call(this, offsetList);
+  setTAreaOffset.call(this, offsetList);
+  setLAreaOffset.call(this, offsetList);
 }
 
 function setAllClipboardOffset(offset) {
@@ -256,42 +274,48 @@ export default class Selector {
 
   resetAreaOffset() {
     // console.log('offset:', offset);
-    const offset = this.data.getSelectedRect();
+    const offsetList = this.data.getSelectedRects();
     const coffset = this.data.getClipboardRect();
-    setAllAreaOffset.call(this, offset);
+    setAllAreaOffset.call(this, offsetList);
     setAllClipboardOffset.call(this, coffset);
     this.resetOffset();
   }
 
   resetBRTAreaOffset() {
-    const offset = this.data.getSelectedRect();
+    const offsetList = this.data.getSelectedRects();
     const coffset = this.data.getClipboardRect();
-    setBRAreaOffset.call(this, offset);
-    setTAreaOffset.call(this, offset);
+    setBRAreaOffset.call(this, offsetList);
+    setTAreaOffset.call(this, offsetList);
     setBRClipboardOffset.call(this, coffset);
     setTClipboardOffset.call(this, coffset);
     this.resetOffset();
   }
 
   resetBRLAreaOffset() {
-    const offset = this.data.getSelectedRect();
+    const offsetList = this.data.getSelectedRects();
     const coffset = this.data.getClipboardRect();
-    setBRAreaOffset.call(this, offset);
-    setLAreaOffset.call(this, offset);
+    setBRAreaOffset.call(this, offsetList);
+    setLAreaOffset.call(this, offsetList);
     setBRClipboardOffset.call(this, coffset);
     setLClipboardOffset.call(this, coffset);
     this.resetOffset();
   }
 
-  set(ri, ci, indexesUpdated = true) {
+  set(ri, ci, indexesUpdated = true, additive = false) {
     const { data } = this;
+    if (additive) {
+      data.selector.pushCurrentSelection();
+    }
+    else {
+      data.selector.resetSelections();
+    }
     const cellRange = data.calSelectedRangeByStart(ri, ci);
     const { sri, sci } = cellRange;
     if (indexesUpdated) {
       let [cri, cci] = [ri, ci];
       if (ri < 0) cri = 0;
       if (ci < 0) cci = 0;
-      data.selector.setIndexes(cri, cci);
+      data.selector.setIndexes(cri, cci, additive);
       this.indexes = [cri, cci];
     }
 
@@ -303,15 +327,23 @@ export default class Selector {
     this.el.show();
   }
 
-  setEnd(ri, ci, moving = true) {
+  setEnd(ri, ci, moving = true, additive = false) {
     const { data, lastri, lastci } = this;
     if (moving) {
       if (ri === lastri && ci === lastci) return;
       this.lastri = ri;
       this.lastci = ci;
     }
+    if (!moving) {
+      if (additive) {
+        data.selector.pushCurrentSelection();
+      }
+      else {
+        data.selector.resetSelections();
+      }
+    }
     this.range = data.calSelectedRangeByEnd(ri, ci);
-    setAllAreaOffset.call(this, this.data.getSelectedRect());
+    setAllAreaOffset.call(this, this.data.getSelectedRects());
   }
 
   reset() {
