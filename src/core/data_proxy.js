@@ -633,6 +633,10 @@ export default class DataProxy {
     return this.getRect(this.selector.range);
   }
 
+  getSelectedRects() {
+    return this.selector.ranges.map(range => this.getRect(range));
+  }
+
   getClipboardRect() {
     const { clipboard } = this;
     if (!clipboard.isClear()) {
